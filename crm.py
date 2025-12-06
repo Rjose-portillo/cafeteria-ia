@@ -1,3 +1,11 @@
+"""
+Sistema de Gestión de Relaciones con Clientes (CRM).
+Este script realiza análisis de datos sobre el historial de pedidos en Firestore.
+Calcula métricas de fidelización (Frecuencia, Ticket Promedio, Producto Favorito)
+y segmenta a los clientes en niveles (Magistrado, Asociado, Pasante).
+Sincroniza estos perfiles enriquecidos de vuelta a Firestore para que el mesero virtual
+pueda personalizar la atención.
+"""
 import os
 import pandas as pd
 from google.cloud import firestore

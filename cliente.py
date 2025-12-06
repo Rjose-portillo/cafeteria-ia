@@ -1,4 +1,11 @@
 
+"""
+Frontend para Cliente Final (Streamlit).
+Esta aplicación simula la interfaz móvil del usuario (tipo WhatsApp/Messenger).
+Gestiona la interacción del cliente con el mesero virtual, enviando mensajes al backend,
+recibiendo respuestas, y mostrando feedback visual (globos, tickets) cuando se confirman órdenes.
+Manitene el historial de chat en sesión local.
+"""
 import streamlit as st
 import requests
 import json

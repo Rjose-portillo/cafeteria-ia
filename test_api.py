@@ -1,3 +1,9 @@
+"""
+Tests de Integración de API.
+Conjunto de pruebas automatizadas usando `pytest` y `TestClient` de FastAPI.
+Verifican que los endpoints del backend respondan correctamente, validando códigos de estado,
+estructuras JSON de respuesta y manejo de errores básicos sin necesidad de levantar el servidor completo.
+"""
 import requests
 import json
 

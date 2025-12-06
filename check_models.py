@@ -1,4 +1,9 @@
-
+"""
+Herramienta de Diagnóstico de Modelos.
+Este pequeño script utilitario sirve para validar la integridad de la estructura de datos.
+Permite instanciar y probar los modelos Pydantic (Order, Customer, etc.) de forma aislada 
+para asegurar que las reglas de tipo y validación estén funcionando antes de integrarlos al backend.
+"""
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv

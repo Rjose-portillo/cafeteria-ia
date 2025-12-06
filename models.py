@@ -1,6 +1,13 @@
+"""
+Definición de Modelos de Datos (Pydantic).
+Este archivo contiene la estructura central de la información del negocio.
+Define las clases (Order, OrderItem, Customer, ChatMessage) que aseguran la consistencia
+de los datos en todo el sistema. Incluye mixins para facilitar la serialización/deserialización
+compatible con Firestore y validaciones de tipos estrictas.
+"""
 from enum import Enum
 from typing import List, Optional, Any, Dict
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 
 class Category(str, Enum):
@@ -44,15 +51,21 @@ class OrderItem(BaseModel, FirestoreModelMixin):
 class Order(BaseModel, FirestoreModelMixin):
     id: Optional[str] = None
     id_cliente: str
-    fecha_creacion: datetime = Field(default_factory=datetime.now)
+    # ...
+    fecha_creacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     items: List[OrderItem]
     total: float
     estado: OrderStatus = OrderStatus.PENDIENTE
     metodo_pago: str = "pendiente"
     requiere_factura: bool = False # [NUEVO]
+    
+    # Manejo de Tiempos
+    hora_entrega_estimada: Optional[datetime] = None
+    hora_entrega_programada: Optional[datetime] = None
+    tiempo_preparacion_total: int = 0
 
 class ChatMessage(BaseModel, FirestoreModelMixin): 
     """[NUEVO] Modelo para la memoria del chat"""
     role: str
     content: str
-    timestamp: datetime = Field(default_factory=datetime.now)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

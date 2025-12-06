@@ -1,3 +1,9 @@
+"""
+Tests Unitarios de Modelos.
+Pruebas enfocadas en validar la lógica y restricciones de los modelos de datos (models.py).
+Aseguran que no se puedan crear ítems con precios negativos, cantidades cero,
+y valida la correcta conversión de tipos al interactuar con el formato de Firestore.
+"""
 import json
 from datetime import datetime
 from models import MenuItem, OrderItem, Order, Customer, Category, OrderStatus

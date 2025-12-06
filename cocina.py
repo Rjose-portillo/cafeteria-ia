@@ -1,4 +1,11 @@
 
+"""
+Dashboard de Cocina (KDS - Kitchen Display System).
+Este módulo simula la pantalla que verían los cocineros.
+Se conecta en tiempo real a Firestore para escuchar nuevos pedidos 'pendientes',
+mostrándolos en tarjetas visuales. Permite al staff de cocina marcar órdenes 
+como 'en preparación' o 'listas', actualizando el estado en la base de datos.
+"""
 import streamlit as st
 from google.cloud import firestore
 import os

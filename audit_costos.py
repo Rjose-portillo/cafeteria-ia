@@ -1,5 +1,11 @@
-
-from google.cloud import firestore
+"""
+Módulo de Auditoría de Costos.
+Este script permite inspeccionar "las tripas" de las órdenes recientes en Firestore.
+Su función principal es verificar que los campos ocultos de contabilidad (costo_unitario, margen) 
+se estén calculando y guardando correctamente en la base de datos, 
+permitiendo al desarrollador validar la rentabilidad invisible del sistema.
+"""
+import firestore
 import os
 from dotenv import load_dotenv
 
