@@ -554,7 +554,7 @@ def render_order_card(orden: dict):
         items_html += f"""
             <div class="order-item">
                 <span class="item-name">{cantidad}x {nombre}{mods_text}</span>
-                <span class="item-price">${precio * cantidad:.0f}</span>
+                <span class="item-price">${precio:.0f}</span>
             </div>
         """
 
@@ -637,16 +637,16 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-# --- MAIN APP - PREMIUM MOBILE EXPERIENCE ---
+# --- MAIN APP - WHATSAPP BUSINESS STYLE ---
 
-# Fixed Mobile Header
+# Fixed WhatsApp-style Header
 st.markdown("""
-    <div class="mobile-header">
+    <div class="whatsapp-header">
         <div class="header-left">
             <div class="header-avatar">☕</div>
             <div class="header-info">
-                <h1>Justicia y Café</h1>
-                <div class="header-status">En línea</div>
+                <div class="header-title">Justicia y Café</div>
+                <div class="header-subtitle">En línea</div>
             </div>
         </div>
     </div>
@@ -656,12 +656,12 @@ st.markdown("""
 if "messages" not in st.session_state:
     st.session_state.messages = [{
         "role": "assistant",
-        "content": "¡Hola! 👋 Soy Pepe, tu mesero virtual. ¿Qué te puedo servir hoy?",
+        "content": "¡Hola! 👋 Soy Pepe, tu mesero virtual. ¿Qué se te antoja hoy?",
         "tipo": "texto"
     }]
 
-# Chat Container
-st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+# Chat Messages Container
+st.markdown('<div class="chat-messages">', unsafe_allow_html=True)
 
 # Render chat history
 for message in st.session_state.messages:
@@ -680,26 +680,18 @@ for message in st.session_state.messages:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Fixed Bottom Input Area
-st.markdown('<div class="input-container">', unsafe_allow_html=True)
+st.markdown('<div class="input-area">', unsafe_allow_html=True)
 st.markdown('<div class="input-wrapper">', unsafe_allow_html=True)
 
 # Chat input
 if prompt := st.chat_input("Escribe tu mensaje...", key="chat_input"):
     # Add user message to history and display
     st.session_state.messages.append({"role": "user", "content": prompt})
-    render_message("user", prompt)
+    render_message("user", content=prompt)
 
     # Show typing indicator
     typing_placeholder = st.empty()
-    typing_placeholder.markdown("""
-        <div class="message-wrapper typing-wrapper">
-            <div class="typing-indicator">
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    render_typing_indicator()
 
     # API call
     try:
