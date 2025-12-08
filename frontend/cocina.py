@@ -406,6 +406,9 @@ def render_order_ticket(order: dict, show_action: str = None):
     
     minutes, border_class, badge_class = get_time_status(fecha)
     
+    # Add fire icon for red tickets
+    header_icon = "🔥 " if border_class == "time-red" else ""
+
     # Build items HTML
     items_html = ""
     for item in items:
@@ -431,7 +434,7 @@ def render_order_ticket(order: dict, show_action: str = None):
     st.markdown(f"""
         <div class="order-ticket {border_class}">
             <div class="ticket-header">
-                <span class="ticket-id">#{order_id[-8:]}</span>
+                <span class="ticket-id">{header_icon}#{order_id[-8:]}</span>
                 <span class="ticket-time {badge_class}">{minutes} min</span>
             </div>
             <div class="ticket-body">
@@ -463,11 +466,11 @@ def fetch_orders(api_base: str, endpoint: str) -> list:
         st.error(f"Error fetching orders: {str(e)}")
         return []
 
-def update_order_status(api_base: str, order_id: str, endpoint: str) -> bool:
+def update_order_status(api_base: str, order_id: str, endpoint: str, params: dict = None) -> bool:
     """Update order status via API with error handling."""
     try:
         url = f"{api_base}/orders/{order_id}/{endpoint}"
-        response = requests.patch(url, timeout=5)
+        response = requests.patch(url, params=params, timeout=5)
         if response.status_code == 200:
             return True
         else:
@@ -670,11 +673,19 @@ with col3:
     else:
         for order in ready_orders:
             order_id = render_order_ticket(order)
-            col1, col2 = st.columns([3, 1])
+            col1, col2, col3 = st.columns([2, 1, 1])
             with col1:
                 st.empty()
             with col2:
-                if st.button(f"🚀 Entregar #{order_id[-4:]}", key=f"deliver_{order_id}", use_container_width=True):
+                if st.button(f"↩️", key=f"undo_{order_id}", use_container_width=True, help="Deshacer (Volver a preparación)"):
+                    if update_order_status(api_base, order_id, "status", params={"new_status": "en_preparacion"}):
+                        st.toast(f"🔄 Orden {order_id[-4:]} devuelta a preparación")
+                        time.sleep(0.5)
+                        st.rerun()
+                    else:
+                        st.error(f"❌ Error al deshacer orden {order_id[-4:]}")
+            with col3:
+                if st.button(f"🚀", key=f"deliver_{order_id}", use_container_width=True, help="Marcar como entregado"):
                     if update_order_status(api_base, order_id, "mark-delivered"):
                         st.success(f"✅ Orden {order_id[-4:]} entregada")
                         st.balloons()

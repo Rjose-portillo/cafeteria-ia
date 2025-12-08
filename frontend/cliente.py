@@ -315,7 +315,7 @@ st.markdown("""
     }
 
     .menu-chat-item-name {
-        color: #ffffff;
+        color: #e0e0e0;
         font-weight: 500;
         flex: 1;
     }
@@ -460,6 +460,43 @@ st.markdown("""
         z-index: 1000;
     }
 
+    /* Quick Chips Buttons - Targeted via Marker Sibling Selector */
+    /* Target the Horizontal Block following the chips-start marker */
+    .element-container:has(#chips-start) + .element-container [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        overflow-x: auto !important;
+        gap: 8px !important;
+        padding-bottom: 8px !important;
+        white-space: nowrap !important;
+        flex-wrap: nowrap !important; /* Force single line */
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .element-container:has(#chips-start) + .element-container [data-testid="stHorizontalBlock"]::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Target buttons inside that block */
+    .element-container:has(#chips-start) + .element-container [data-testid="stHorizontalBlock"] button {
+        border-radius: 20px !important;
+        padding: 4px 12px !important;
+        font-size: 12px !important;
+        min-height: auto !important;
+        height: auto !important;
+        border: 1px solid #d1d7db !important;
+        background: #ffffff !important;
+        color: #54656f !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+        transition: background 0.2s !important;
+        width: auto !important; /* Prevent full width */
+        flex-shrink: 0 !important; /* Prevent shrinking */
+    }
+
+    .element-container:has(#chips-start) + .element-container [data-testid="stHorizontalBlock"] button:hover {
+        background: #f0f2f5 !important;
+    }
+
     .input-wrapper {
         max-width: 400px;
         margin: 0 auto;
@@ -478,7 +515,7 @@ st.markdown("""
         background: #262730 !important;
         border-right: 1px solid #404040 !important;
         box-shadow: 2px 0 8px rgba(0,0,0,0.3) !important;
-        padding-top: 80px !important;
+        padding-top: 100px !important;
     }
 
     [data-testid="stSidebar"] * {
@@ -683,34 +720,19 @@ def render_menu_card():
     if menu_data.get("bebidas"):
         menu_html += '<div class="menu-chat-category">☕ BEBIDAS</div>'
         for item in menu_data["bebidas"]:
-            menu_html += f"""
-        <div class="menu-chat-item">
-            <span class="menu-chat-item-name">{item['nombre']}</span>
-            <span class="menu-chat-item-price">${item['precio']}</span>
-        </div>
-        """
+            menu_html += f'<div class="menu-chat-item"><span class="menu-chat-item-name">{item["nombre"]}</span><span class="menu-chat-item-price">${item["precio"]}</span></div>'
     
     # Alimentos
     if menu_data.get("alimentos"):
         menu_html += '<div class="menu-chat-category">🥐 ALIMENTOS</div>'
         for item in menu_data["alimentos"]:
-            menu_html += f"""
-        <div class="menu-chat-item">
-            <span class="menu-chat-item-name">{item['nombre']}</span>
-            <span class="menu-chat-item-price">${item['precio']}</span>
-        </div>
-        """
+            menu_html += f'<div class="menu-chat-item"><span class="menu-chat-item-name">{item["nombre"]}</span><span class="menu-chat-item-price">${item["precio"]}</span></div>'
     
     # Postres
     if menu_data.get("postres"):
         menu_html += '<div class="menu-chat-category">🍰 POSTRES</div>'
         for item in menu_data["postres"]:
-            menu_html += f"""
-        <div class="menu-chat-item">
-            <span class="menu-chat-item-name">{item['nombre']}</span>
-            <span class="menu-chat-item-price">${item['precio']}</span>
-        </div>
-        """
+            menu_html += f'<div class="menu-chat-item"><span class="menu-chat-item-name">{item["nombre"]}</span><span class="menu-chat-item-price">${item["precio"]}</span></div>'
     
     menu_html += """
         <div style="text-align: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid #404040;">
@@ -947,6 +969,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 st.markdown('<div class="input-area">', unsafe_allow_html=True)
 
 # Quick Action Chips
+st.markdown('<span id="chips-start"></span>', unsafe_allow_html=True)
 c1, c2, c3, c4 = st.columns(4)
 with c1:
     if st.button("📜 Ver Menú", key="btn_menu", use_container_width=True):
