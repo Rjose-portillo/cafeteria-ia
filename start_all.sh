@@ -87,7 +87,14 @@ fi
 
 # Verificar Python
 PYTHON_VERSION=$(python3 --version 2>&1 | cut -d' ' -f2)
-log "🐍 Python version: $PYTHON_VERSION"
+PYTHON_MAJOR=$(echo "$PYTHON_VERSION" | cut -d. -f1)
+PYTHON_MINOR=$(echo "$PYTHON_VERSION" | cut -d. -f2)
+
+if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 10 ]); then
+    error "❌ Se requiere Python 3.10 o superior (detectado $PYTHON_VERSION)"
+    exit 1
+fi
+log "🐍 Python version: $PYTHON_VERSION (Compatible)"
 
 # Instalar/actualizar dependencias
 log "📦 Verificando dependencias..."

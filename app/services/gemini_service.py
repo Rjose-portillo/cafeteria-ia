@@ -285,22 +285,21 @@ Ejemplo válido: ["¡Claro que sí!", "¿De qué sabor quieres tu dona?"]
                 return ChatResponse(tipo="error", mensaje="Sin respuesta válida del AI")
 
             part = response.candidates[0].content.parts[0]
+            function_call = part.function_call
 
-            # CASE A: Order interpretation
-            if part.function_call and part.function_call.name == 'interpretar_orden':
-                return await self._handle_order(telefono, part.function_call.args, menu_service, firestore)
+            if function_call:
+                function_name = function_call.name
+                function_args = function_call.args
 
-            # CASE B: Order cancellation
-            elif part.function_call and part.function_call.name == 'cancelar_orden':
-                return await self._handle_cancellation(telefono, part.function_call.args, firestore)
+                if function_name == 'interpretar_orden':
+                    return await self._handle_order(telefono, function_args, menu_service, firestore)
+                elif function_name == 'cancelar_orden':
+                    return await self._handle_cancellation(telefono, function_args, firestore)
+                elif function_name == 'registrar_nombre':
+                    return await self._handle_name_registration(telefono, function_args, firestore)
 
-            # CASE C: Name registration
-            elif part.function_call and part.function_call.name == 'registrar_nombre':
-                return await self._handle_name_registration(telefono, part.function_call.args, firestore)
-
-            # CASE D: Text response
-            else:
-                return await self._handle_text_response(telefono, response.text, firestore)
+            # Text response
+            return await self._handle_text_response(telefono, response.text, firestore)
 
         except Exception as e:
             print(f"❌ Error en process_chat: {e}")

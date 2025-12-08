@@ -654,30 +654,6 @@ st.markdown("""
 # --- API CONFIGURATION ---
 API_BASE_URL = "http://localhost:8000"
 
-# --- MENU DATA ---
-MENU_DATA = {
-    "bebidas": [
-        {"nombre": "Latte", "precio": 45, "descripcion": "Café espresso con leche vaporizada"},
-        {"nombre": "Flat White", "precio": 65, "descripcion": "Doble espresso con microfoam"},
-        {"nombre": "Cold Brew", "precio": 70, "descripcion": "Café frío infusionado 12 horas"},
-        {"nombre": "Cappuccino", "precio": 50, "descripcion": "Espresso, leche y espuma perfecta"},
-        {"nombre": "Americano", "precio": 35, "descripcion": "Espresso diluido con agua caliente"}
-    ],
-    "alimentos": [
-        {"nombre": "Croissant", "precio": 40, "descripcion": "Hojaldre francés recién horneado"},
-        {"nombre": "Bagel Salmón", "precio": 145, "descripcion": "Bagel con salmón ahumado y cream cheese"},
-        {"nombre": "Panini", "precio": 125, "descripcion": "Panini tostado con jamón y queso"},
-        {"nombre": "Muffin Arándanos", "precio": 55, "descripcion": "Muffin casero con arándanos frescos"},
-        {"nombre": "Tostada Aguacate", "precio": 85, "descripcion": "Pan artesanal con aguacate y tomate"}
-    ],
-    "postres": [
-        {"nombre": "Cheesecake", "precio": 95, "descripcion": "Cheesecake cremoso con frutos rojos"},
-        {"nombre": "Brownie", "precio": 65, "descripcion": "Brownie de chocolate con helado de vainilla"},
-        {"nombre": "Tiramisú", "precio": 85, "descripcion": "Clásico italiano con café y mascarpone"},
-        {"nombre": "Macaron Mix", "precio": 120, "descripcion": "Selección de macarons artesanales"}
-    ]
-}
-
 # --- HELPER FUNCTIONS ---
 
 @st.cache_data(ttl=300)
@@ -699,10 +675,13 @@ def fetch_menu_from_api(api_url):
                 elif cat in ['postres', 'postre']:
                     menu["postres"].append(item)
             return menu
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         print(f"Error fetching menu: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
 
-    return MENU_DATA
+    # Return empty menu on failure
+    return {"bebidas": [], "alimentos": [], "postres": []}
 
 def render_menu_card():
     """Generate beautiful menu card HTML for chat display"""
@@ -917,8 +896,6 @@ if chat_is_empty:
     """, unsafe_allow_html=True)
     st.markdown('<div style="clear: both;"></div>', unsafe_allow_html=True)
 
-    # Quick menu button removed - used via chips
-    pass
 else:
     # Show existing chat history
     pass
