@@ -131,6 +131,7 @@ log "🔍 Verificando puertos..."
 check_port 8000 || exit 1
 check_port 8501 || exit 1
 check_port 8502 || exit 1
+check_port 8503 || exit 1
 
 # Función para manejar señales de interrupción
 cleanup() {
@@ -192,6 +193,11 @@ log "🍳 Iniciando Cocina (KDS) en puerto 8502..."
 streamlit run frontend/cocina.py --server.port 8502 --server.address 0.0.0.0 --server.headless true > /dev/null 2>&1 &
 COCINA_PID=$!
 
+# 4. Dashboard (Panel de Control)
+log "📊 Iniciando Dashboard (Panel de Control) en puerto 8503..."
+streamlit run frontend/dashboard.py --server.port 8503 --server.address 0.0.0.0 --server.headless true > /dev/null 2>&1 &
+DASHBOARD_PID=$!
+
 # Esperar un poco para que los servicios inicien visualmente
 sleep 3
 
@@ -199,7 +205,7 @@ sleep 3
 log "🔍 Verificando servicios..."
 
 SERVICES_UP=0
-TOTAL_SERVICES=3
+TOTAL_SERVICES=4
 
 # Backend check
 if curl -s "http://localhost:8000/docs" >/dev/null 2>&1; then
@@ -226,6 +232,14 @@ else
     error "❌ Cocina (KDS) no responde"
 fi
 
+# Dashboard check
+if curl -s "http://localhost:8503/_stcore/health" >/dev/null 2>&1; then
+    log "✅ Dashboard: http://localhost:8503"
+    ((SERVICES_UP++))
+else
+    error "❌ Dashboard no responde"
+fi
+
 echo
 log "🎉 ¡Todos los servicios iniciados exitosamente!"
 log "📊 Estado: $SERVICES_UP/$TOTAL_SERVICES servicios activos"
@@ -234,6 +248,7 @@ info "🌐 URLs de acceso (Abre en tu navegador de Windows):"
 info "   🔧 Backend API: http://localhost:8000/docs"
 info "   💬 Cliente:     http://localhost:8501"
 info "   🍳 Cocina:      http://localhost:8502"
+info "   📊 Dashboard:   http://localhost:8503"
 echo
 warning "Presiona Ctrl+C para detener todos los servicios"
 

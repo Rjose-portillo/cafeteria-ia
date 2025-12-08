@@ -47,6 +47,12 @@ class FirestoreModelMixin:
         return cls(**data)
 
 
+class ItemReceta(BaseModel):
+    """Recipe item linking ingredient to quantity."""
+    insumo_id: str
+    cantidad: float
+
+
 class MenuItem(BaseModel, FirestoreModelMixin):
     """Menu item representation."""
     id: Optional[str] = None
@@ -58,6 +64,7 @@ class MenuItem(BaseModel, FirestoreModelMixin):
     disponible: bool = True
     modificadores: List[str] = []
     imagen_url: Optional[str] = None
+    receta: List[ItemReceta] = Field(default_factory=list)
 
 
 class OrderItem(BaseModel, FirestoreModelMixin):
@@ -157,6 +164,103 @@ class CustomerProfile(BaseModel, FirestoreModelMixin):
     preferencias: List[str] = Field(default_factory=list)
 
 
+# --- Inventory & Recipe Models ---
+
+class Insumo(BaseModel, FirestoreModelMixin):
+    """Ingredient for inventory management."""
+    id: Optional[str] = None
+    nombre: str
+    unidad_medida: str  # "g", "ml", "unidad", etc.
+    costo_por_unidad: float
+    stock_actual: float = 0.0
+
+
+class Ingredient(BaseModel, FirestoreModelMixin):
+    """
+    Ingredient for inventory management.
+    Tracks stock levels and triggers alerts.
+    """
+    id: Optional[str] = None
+    nombre: str
+    unidad: str = "unidades"  # unidades, kg, litros, gramos
+    stock_actual: float = 0.0
+    stock_minimo: float = 10.0  # Alert threshold
+    costo_unitario: float = 0.0
+    proveedor: Optional[str] = None
+    ultima_compra: Optional[datetime] = None
+    
+    @computed_field
+    @property
+    def necesita_restock(self) -> bool:
+        """Check if ingredient needs restocking."""
+        return self.stock_actual <= self.stock_minimo
+
+
+class RecipeIngredient(BaseModel):
+    """Ingredient quantity for a recipe."""
+    ingrediente_id: str
+    nombre_ingrediente: str
+    cantidad: float
+    unidad: str
+
+
+class Recipe(BaseModel, FirestoreModelMixin):
+    """
+    Recipe linking a menu item to its ingredients.
+    Used for inventory deduction and cost calculation.
+    """
+    id: Optional[str] = None
+    producto_id: str  # Links to MenuItem
+    nombre_producto: str
+    ingredientes: List[RecipeIngredient] = Field(default_factory=list)
+    instrucciones: Optional[str] = None
+    tiempo_preparacion: int = 5  # Minutes
+    
+    @computed_field
+    @property
+    def costo_receta(self) -> float:
+        """Calculate recipe cost from ingredients (placeholder - needs ingredient costs)."""
+        return 0.0  # Would need to lookup ingredient costs
+
+
+class InventoryTransaction(BaseModel, FirestoreModelMixin):
+    """
+    Inventory movement record.
+    Tracks additions (purchases) and deductions (sales).
+    """
+    id: Optional[str] = None
+    ingrediente_id: str
+    tipo: str = "salida"  # entrada, salida, ajuste
+    cantidad: float
+    motivo: str = "venta"  # venta, compra, merma, ajuste
+    orden_id: Optional[str] = None
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+
+
+class DailySales(BaseModel, FirestoreModelMixin):
+    """
+    Daily sales summary for KPI dashboard.
+    Aggregated data for reporting.
+    """
+    id: Optional[str] = None  # Format: YYYY-MM-DD
+    fecha: datetime
+    total_ventas: float = 0.0
+    total_ordenes: int = 0
+    ticket_promedio: float = 0.0
+    productos_vendidos: Dict[str, int] = Field(default_factory=dict)
+    costo_total: float = 0.0
+    
+    @computed_field
+    @property
+    def margen_bruto(self) -> float:
+        """Calculate gross margin percentage."""
+        if self.total_ventas > 0:
+            return ((self.total_ventas - self.costo_total) / self.total_ventas) * 100
+        return 0.0
+
+
 # --- API Request/Response Models ---
 
 class ChatRequest(BaseModel):
@@ -172,3 +276,27 @@ class ChatResponse(BaseModel):
     mensajes: Optional[List[str]] = None  # For multi-bubble responses
     orden: Optional[Dict[str, Any]] = None
     metadata: Optional[Dict[str, Any]] = None
+
+
+# --- Dashboard Models ---
+
+class KPIMetrics(BaseModel):
+    """KPI metrics for dashboard display."""
+    ventas_hoy: float = 0.0
+    ventas_semana: float = 0.0
+    ventas_mes: float = 0.0
+    ordenes_hoy: int = 0
+    ticket_promedio: float = 0.0
+    producto_estrella: str = "N/A"
+    clientes_nuevos: int = 0
+    tasa_retencion: float = 0.0
+
+
+class InventoryAlert(BaseModel):
+    """Inventory alert for low stock items."""
+    ingrediente_id: str
+    nombre: str
+    stock_actual: float
+    stock_minimo: float
+    unidad: str
+    urgencia: str = "media"  # baja, media, alta, critica

@@ -10,7 +10,7 @@ from google.cloud import firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.core.config import settings
-from app.models.schemas import Order, OrderItem, ChatMessage, OrderStatus, CustomerProfile
+from app.models.schemas import Order, OrderItem, ChatMessage, OrderStatus, CustomerProfile, Insumo
 
 
 class FirestoreService:
@@ -220,13 +220,142 @@ class FirestoreService:
         """Update or create customer profile."""
         if not self.is_connected:
             return False
-        
+
         try:
             self._db.collection('clientes').document(telefono).set(profile_data, merge=True)
             return True
         except Exception as e:
             print(f"❌ Error actualizando perfil: {e}")
             return False
+
+    # --- Ingredient Operations ---
+
+    async def get_all_insumos(self) -> List[Dict[str, Any]]:
+        """Get all ingredients."""
+        if not self.is_connected:
+            return []
+
+        try:
+            docs = self._db.collection('insumos').stream()
+
+            insumos = []
+            for doc in docs:
+                insumo_data = doc.to_dict()
+                insumo_data['id'] = doc.id
+                insumos.append(insumo_data)
+
+            return insumos
+        except Exception as e:
+            print(f"❌ Error obteniendo insumos: {e}")
+            return []
+
+    async def create_insumo(self, insumo: Insumo) -> bool:
+        """Create a new ingredient."""
+        if not self.is_connected:
+            return False
+
+        try:
+            doc_ref = self._db.collection('insumos').document()
+            insumo.id = doc_ref.id
+            doc_ref.set(insumo.to_firestore())
+            return True
+        except Exception as e:
+            print(f"❌ Error creando insumo: {e}")
+            return False
+
+    async def update_insumo(self, insumo_id: str, data: Dict[str, Any]) -> bool:
+        """Update an existing ingredient."""
+        if not self.is_connected:
+            return False
+
+        try:
+            self._db.collection('insumos').document(insumo_id).update(data)
+            return True
+        except Exception as e:
+            print(f"❌ Error actualizando insumo: {e}")
+            return False
+
+    # --- Daily Sales Metrics ---
+
+    async def get_daily_sales_metrics(self, date: datetime) -> Dict[str, Any]:
+        """
+        Get daily sales metrics for a specific date.
+        Returns total sales and number of orders for that day.
+        """
+        if not self.is_connected:
+            return {"total_ventas": 0.0, "total_ordenes": 0}
+
+        try:
+            # Calculate start and end of the day in UTC
+            start_of_day = date.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_of_day = start_of_day.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+            # Query orders for the day
+            query = self._db.collection('pedidos')\
+                .where(filter=FieldFilter("fecha_creacion", ">=", start_of_day))\
+                .where(filter=FieldFilter("fecha_creacion", "<=", end_of_day))\
+                .where(filter=FieldFilter("estado", "in", ["entregado", "listo"]))
+
+            docs = list(query.stream())
+
+            total_ventas = 0.0
+            total_ordenes = len(docs)
+
+            for doc in docs:
+                order_data = doc.to_dict()
+                total_ventas += order_data.get('total', 0.0)
+
+            return {
+                "total_ventas": total_ventas,
+                "total_ordenes": total_ordenes
+            }
+        except Exception as e:
+            print(f"❌ Error obteniendo métricas diarias: {e}")
+            return {"total_ventas": 0.0, "total_ordenes": 0}
+
+    # --- Premium Personalization Features ---
+
+    async def get_favorite_product(self, telefono: str) -> Optional[str]:
+        """
+        Get customer's favorite product based on order history.
+        Returns the product name if ordered 3+ times, None otherwise.
+        """
+        if not self.is_connected:
+            return None
+
+        try:
+            # Query all completed orders for this customer
+            query = self._db.collection('pedidos')\
+                .where(filter=FieldFilter("id_cliente", "==", telefono))\
+                .where(filter=FieldFilter("estado", "in", ["entregado", "listo"]))
+
+            docs = list(query.stream())
+
+            if not docs:
+                return None
+
+            # Count product occurrences
+            product_counts = {}
+
+            for doc in docs:
+                order_data = doc.to_dict()
+                items = order_data.get('items', [])
+
+                for item in items:
+                    product_name = item.get('nombre_producto', '')
+                    if product_name:
+                        product_counts[product_name] = product_counts.get(product_name, 0) + item.get('cantidad', 1)
+
+            # Find product ordered 3+ times
+            for product, count in product_counts.items():
+                if count >= 3:
+                    return product
+
+            return None
+
+        except Exception as e:
+            print(f"❌ Error obteniendo producto favorito para {telefono}: {e}")
+            return None
 
 
 @lru_cache()

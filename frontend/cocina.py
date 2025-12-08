@@ -6,6 +6,11 @@ Features:
 - Auto-refresh without aggressive flickering
 - Clear item display with modifiers
 """
+import sys
+import os
+# Agrega el directorio raíz del proyecto al path de Python
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import streamlit as st
 import requests
 from datetime import datetime, timezone

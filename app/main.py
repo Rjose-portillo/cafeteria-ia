@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.api.routers import chat_router, orders_router, menu_router
 from app.services.menu_service import get_menu_service
 from app.services.gemini_service import get_gemini_service
+from app.services.scheduler_service import get_scheduler_service
 
 
 @asynccontextmanager
@@ -22,20 +23,25 @@ async def lifespan(app: FastAPI):
     # Startup
     print(f"🚀 Iniciando {settings.APP_NAME} v{settings.APP_VERSION}")
     print(f"📍 Ambiente: {settings.ENV}")
-    
+
     # Load menu cache
     menu_service = get_menu_service()
     menu_service.load_menu()
-    
+
     # Initialize Gemini (this will use the loaded menu)
     gemini_service = get_gemini_service()
-    
+
+    # Start scheduler for automated tasks
+    scheduler_service = get_scheduler_service()
+    scheduler_service.start()
+
     print("✅ Servicios inicializados correctamente")
-    
+
     yield
-    
+
     # Shutdown
     print("👋 Cerrando aplicación...")
+    scheduler_service.shutdown()
 
 
 # Create FastAPI app
