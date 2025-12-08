@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     GOOGLE_CLOUD_PROJECT: str
     
     # AI Model Configuration
-    GEMINI_MODEL: str = "gemini-2.0-flash"
+    GEMINI_MODEL: str = "gemini-1.5-flash"
     
     # Environment
     ENV: Literal["local", "prod"] = "local"

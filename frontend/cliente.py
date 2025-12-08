@@ -970,7 +970,7 @@ st.markdown('<div class="input-area">', unsafe_allow_html=True)
 
 # Quick Action Chips
 st.markdown('<span id="chips-start"></span>', unsafe_allow_html=True)
-c1, c2, c3, c4 = st.columns(4)
+c1, c2, c3, c4, c5 = st.columns(5)
 with c1:
     if st.button("📜 Ver Menú", key="btn_menu", use_container_width=True):
         st.session_state.messages.append({'role': 'user', 'content': '📜 Ver Menú'})
@@ -984,6 +984,10 @@ with c3:
         st.session_state.messages.append({'role': 'user', 'content': '⚖️ Mis Puntos'})
         st.rerun()
 with c4:
+    if st.button("📋 Estado de Pedido", key="btn_estado", use_container_width=True):
+        st.session_state.messages.append({'role': 'user', 'content': '📋 Estado de Pedido'})
+        st.rerun()
+with c5:
     if st.button("🎲 Sorpréndeme", key="btn_sorpresa", use_container_width=True):
         st.session_state.messages.append({'role': 'user', 'content': '🎲 Sorpréndeme'})
         st.rerun()

@@ -81,4 +81,48 @@ async def mark_ready(order_id: str):
 @router.patch("/{order_id}/mark-delivered")
 async def mark_delivered(order_id: str):
     """Mark an order as delivered."""
+@router.get("/status/{telefono}")
+async def get_customer_order_status(telefono: str):
+    """
+    Get the current order status for a customer.
+    Returns the most recent order and its status.
+    """
+    firestore = get_firestore_service()
+
+    # Get pending order first
+    pending = await firestore.get_pending_order(telefono)
+    if pending:
+        doc, data = pending
+        return {
+            "order_id": doc.id,
+            "status": data.get('estado', 'desconocido'),
+            "items": data.get('items', []),
+            "total": data.get('total', 0),
+            "tiempo_estimado": data.get('tiempo_preparacion_total', 0),
+            "hora_entrega_estimada": data.get('hora_entrega_estimada')
+        }
+
+    # If no pending order, check recent completed orders
+    if firestore.is_connected:
+        try:
+            query = firestore._db.collection('pedidos')\
+                .where(filter=firestore._db.field_filter("id_cliente", "==", telefono))\
+                .where(filter=firestore._db.field_filter("estado", "in", ["entregado", "listo"]))\
+                .order_by('fecha_creacion', direction=firestore._db.Query.DESCENDING)\
+                .limit(1)
+
+            docs = list(query.stream())
+            if docs:
+                data = docs[0].to_dict()
+                return {
+                    "order_id": docs[0].id,
+                    "status": data.get('estado', 'desconocido'),
+                    "items": data.get('items', []),
+                    "total": data.get('total', 0),
+                    "message": "Tu pedido anterior ya fue entregado. ¿Quieres ordenar algo más?"
+                }
+        except Exception as e:
+            print(f"Error checking recent orders: {e}")
+
+    return {"status": "no_orders", "message": "No tienes pedidos activos. ¿Qué te gustaría ordenar?"}
     return await update_order_status(order_id, OrderStatus.ENTREGADO)

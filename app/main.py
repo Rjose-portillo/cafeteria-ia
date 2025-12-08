@@ -12,6 +12,7 @@ from app.api.routers import chat_router, orders_router, menu_router
 from app.services.menu_service import get_menu_service
 from app.services.gemini_service import get_gemini_service
 from app.services.scheduler_service import get_scheduler_service
+from app.services.firestore_service import get_firestore_service
 
 
 @asynccontextmanager
@@ -86,6 +87,38 @@ async def root():
     }
 
 
+@app.get("/metrics")
+async def system_metrics():
+    """System performance metrics endpoint."""
+    import time
+    import os
+
+    # Get service status
+    menu_service = get_menu_service()
+    gemini_service = get_gemini_service()
+    firestore_service = get_firestore_service()
+    scheduler_service = get_scheduler_service()
+
+    # Get basic process info
+    process = os.getpid()
+    memory_info = "N/A"  # Would need psutil for detailed memory
+
+    return {
+        "timestamp": time.time(),
+        "process_id": process,
+        "services": {
+            "menu_loaded": menu_service.is_loaded,
+            "menu_items": menu_service.item_count,
+            "gemini_configured": gemini_service._configured if hasattr(gemini_service, '_configured') else False,
+            "firestore_connected": firestore_service.is_connected,
+            "scheduler_running": scheduler_service.is_running()
+        },
+        "cache_status": {
+            "menu_cache_loaded": menu_service.is_loaded,
+            "menu_cache_size": menu_service.item_count
+        },
+        "uptime": time.time() - getattr(scheduler_service, '_start_time', time.time()) if hasattr(scheduler_service, '_start_time') else 0
+    }
 @app.get("/health")
 async def health():
     """Health check endpoint."""
