@@ -643,8 +643,34 @@ MENU_DATA = {
 
 # --- HELPER FUNCTIONS ---
 
+@st.cache_data(ttl=300)
+def fetch_menu_from_api(api_url):
+    """Fetch menu from backend API with fallback."""
+    try:
+        response = requests.get(f"{api_url}/menu", timeout=5)
+        if response.status_code == 200:
+            items = response.json()
+            # Organize by category
+            menu = {"bebidas": [], "alimentos": [], "postres": []}
+            for item in items:
+                cat = item.get('categoria', 'otros').lower()
+                # Map backend categories to frontend keys if needed
+                if cat in ['bebidas', 'bebida']:
+                    menu["bebidas"].append(item)
+                elif cat in ['alimentos', 'alimento', 'comida']:
+                    menu["alimentos"].append(item)
+                elif cat in ['postres', 'postre']:
+                    menu["postres"].append(item)
+            return menu
+    except Exception as e:
+        print(f"Error fetching menu: {e}")
+
+    return MENU_DATA
+
 def render_menu_card():
     """Generate beautiful menu card HTML for chat display"""
+    menu_data = fetch_menu_from_api(API_BASE_URL)
+
     menu_html = """
     <div class="menu-chat-card">
         <div class="menu-chat-header">
@@ -654,9 +680,10 @@ def render_menu_card():
     """
     
     # Bebidas
-    menu_html += '<div class="menu-chat-category">☕ BEBIDAS</div>'
-    for item in MENU_DATA["bebidas"]:
-        menu_html += f"""
+    if menu_data.get("bebidas"):
+        menu_html += '<div class="menu-chat-category">☕ BEBIDAS</div>'
+        for item in menu_data["bebidas"]:
+            menu_html += f"""
         <div class="menu-chat-item">
             <span class="menu-chat-item-name">{item['nombre']}</span>
             <span class="menu-chat-item-price">${item['precio']}</span>
@@ -664,9 +691,10 @@ def render_menu_card():
         """
     
     # Alimentos
-    menu_html += '<div class="menu-chat-category">🥐 ALIMENTOS</div>'
-    for item in MENU_DATA["alimentos"]:
-        menu_html += f"""
+    if menu_data.get("alimentos"):
+        menu_html += '<div class="menu-chat-category">🥐 ALIMENTOS</div>'
+        for item in menu_data["alimentos"]:
+            menu_html += f"""
         <div class="menu-chat-item">
             <span class="menu-chat-item-name">{item['nombre']}</span>
             <span class="menu-chat-item-price">${item['precio']}</span>
@@ -674,9 +702,10 @@ def render_menu_card():
         """
     
     # Postres
-    menu_html += '<div class="menu-chat-category">🍰 POSTRES</div>'
-    for item in MENU_DATA["postres"]:
-        menu_html += f"""
+    if menu_data.get("postres"):
+        menu_html += '<div class="menu-chat-category">🍰 POSTRES</div>'
+        for item in menu_data["postres"]:
+            menu_html += f"""
         <div class="menu-chat-item">
             <span class="menu-chat-item-name">{item['nombre']}</span>
             <span class="menu-chat-item-price">${item['precio']}</span>
@@ -751,10 +780,11 @@ def render_order_ticket(orden):
 
 def generate_dynamic_sidebar():
     """SIDEBAR DINÁMICO: Itera sobre MENU_DATA para generar HTML"""
+    menu_data = fetch_menu_from_api(API_BASE_URL)
     sidebar_html = '<div class="menu-card">'
     
     # ITERACIÓN DINÁMICA SOBRE MENU_DATA
-    for categoria, items in MENU_DATA.items():
+    for categoria, items in menu_data.items():
         if items:  # Solo si la categoría tiene items
             # Título dinámico basado en la categoría
             categoria_titulos = {
@@ -865,16 +895,8 @@ if chat_is_empty:
     """, unsafe_allow_html=True)
     st.markdown('<div style="clear: both;"></div>', unsafe_allow_html=True)
 
-    # Quick menu button
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button("📜 Ver Menú del Día", use_container_width=True, type="primary"):
-            # Inject menu request into chat
-            st.session_state.messages.append({
-                "role": "user",
-                "content": "Muéstrame el menú"
-            })
-            st.rerun()
+    # Quick menu button removed - used via chips
+    pass
 else:
     # Show existing chat history
     pass
