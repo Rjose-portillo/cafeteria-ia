@@ -922,7 +922,28 @@ if not chat_is_empty:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Fixed bottom input area - WHATSAPP STYLE
-st.markdown('<div class="input-area"><div class="input-wrapper">', unsafe_allow_html=True)
+st.markdown('<div class="input-area">', unsafe_allow_html=True)
+
+# Quick Action Chips
+c1, c2, c3, c4 = st.columns(4)
+with c1:
+    if st.button("📜 Ver Menú", key="btn_menu", use_container_width=True):
+        st.session_state.messages.append({'role': 'user', 'content': '📜 Ver Menú'})
+        st.rerun()
+with c2:
+    if st.button("☕ Lo de siempre", key="btn_habitual", use_container_width=True):
+        st.session_state.messages.append({'role': 'user', 'content': '☕ Lo de siempre'})
+        st.rerun()
+with c3:
+    if st.button("⚖️ Mis Puntos", key="btn_puntos", use_container_width=True):
+        st.session_state.messages.append({'role': 'user', 'content': '⚖️ Mis Puntos'})
+        st.rerun()
+with c4:
+    if st.button("🎲 Sorpréndeme", key="btn_sorpresa", use_container_width=True):
+        st.session_state.messages.append({'role': 'user', 'content': '🎲 Sorpréndeme'})
+        st.rerun()
+
+st.markdown('<div class="input-wrapper">', unsafe_allow_html=True)
 
 # Chat input - VISIBLE SEND BUTTON
 if prompt := st.chat_input("Escribe tu pedido...", key="chat_input"):
