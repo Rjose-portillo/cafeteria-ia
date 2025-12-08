@@ -332,35 +332,6 @@ def run_async(coro):
 
 ---
 
-## 📊 DATOS DE CONFIGURACIÓN CRÍTICOS
-
-### .env Configuration
-```env
-APP_NAME="Justicia y Café"
-APP_VERSION="2.0.0"
-ENV=local
-DEBUG=true
-
-PROJECT_ID=cafeteria-ia-backend
-GOOGLE_CLOUD_PROJECT=cafeteria-ia-backend
-GEMINI_API_KEY=AIzaSyD02mS7D7LNu4xkixi-xYiAJtVJGYau6tM
-GOOGLE_APPLICATION_CREDENTIALS=/home/ricardo/Cafeteria/credentials.json
-GEMINI_MODEL=gemini-2.5-flash
-
-CANCEL_TIME_LIMIT_MINUTES=5
-DEFAULT_PREP_BUFFER_MINUTES=5
-DEFAULT_COST_PERCENTAGE=0.30
-CHAT_HISTORY_LIMIT=15
-MESSAGE_BUFFER_SECONDS=2.0
-FEEDBACK_DELAY_MINUTES=1
-```
-
-### Service Account
-**Proyecto:** cafeteria-ia-backend  
-**Email:** 153345417176-compute@developer.gserviceaccount.com  
-**Scopes:** Firebase Admin, Firestore, Generative AI
-
----
 
 ## 🎯 CASOS DE USO DEMO VALIDADOS
 
