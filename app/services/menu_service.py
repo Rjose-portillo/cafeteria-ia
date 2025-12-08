@@ -114,11 +114,26 @@ class MenuService:
             return self._cache[nombre_lower]
         
         # 4. Partial match (contains)
+        # Use simple string search when search term is SUBSTRING of product name (search: "latte" -> prod: "cafe latte")
+        # BUT enforce word boundaries when product name is SUBSTRING of search term (prod: "tea" -> search: "i want a tea")
+        import re
         for name_key, item_id in self._name_index.items():
+            # Direction 1: Search term is inside Product Name (e.g. "latte" in "cafe latte")
+            # This is safe to do without word boundaries usually, as we want to find partial matches
             if nombre_lower in name_key or nombre_normalized in name_key:
                 return self._cache[item_id]
-            if name_key in nombre_lower or name_key in nombre_normalized:
-                return self._cache[item_id]
+
+            # Direction 2: Product Name is inside Search Term (e.g. "tea" in "i want a tea")
+            # This MUST use word boundaries to avoid matching "tea" inside "steak"
+            try:
+                # Escape name_key for regex safety
+                pattern = r'\b' + re.escape(name_key) + r'\b'
+                if re.search(pattern, nombre_lower) or re.search(pattern, nombre_normalized):
+                    return self._cache[item_id]
+            except Exception:
+                # Fallback to loose matching if regex fails for some reason
+                if name_key in nombre_lower or name_key in nombre_normalized:
+                    return self._cache[item_id]
         
         # 5. Fuzzy match with similarity score
         best_match = None
